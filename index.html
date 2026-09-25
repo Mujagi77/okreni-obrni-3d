@@ -1,0 +1,3913 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no">
+
+<title>Okreni Obrni 3D</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+    margin:0;
+    width:100%;
+    min-height:100%; 
+    overflow-y: auto; 
+    font-family:Arial,sans-serif;
+    color:#fff;
+    background:
+        var(
+            --page-bg,
+            radial-gradient(
+                circle at 50% 10%,
+                #263b58 0%,
+                #0b1220 55%,
+                #020409 100%
+            )
+        );
+}
+
+body{
+    touch-action:manipulation; 
+}
+
+button{
+    border:0;
+    color:#fff;
+    font-weight:bold;
+    font-size:14px;
+    border-radius:12px;
+    background:#1e293b;
+    box-shadow:0 3px 10px #0007;
+    touch-action:manipulation;
+    cursor:pointer;
+}
+
+button:active{
+    transform:scale(.96);
+}
+
+button:disabled{
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+
+/* ==============================
+   GLAVNI EKRAN
+============================== */
+
+.app{
+    width:100%;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    padding:4px 8px;
+}
+
+
+/* ==============================
+   NASLOV
+============================== */
+
+.header{
+    text-align:center;
+    flex-shrink:0;
+}
+
+.header h1{
+    margin:0;
+    font-size:22px;
+}
+
+.header p{
+    margin:0;
+    color:#94a3b8;
+    font-size:10px;
+}
+
+
+/* ==============================
+   STATISTIKA
+============================== */
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:4px;
+    margin:4px 0;
+    flex-wrap:wrap;
+}
+
+.stat{
+    min-width:65px;
+    padding:3px 5px;
+    text-align:center;
+    background:#111827dd;
+    border:1px solid #334155;
+    border-radius:8px;
+}
+
+.stat strong{
+    display:block;
+    font-size:13px;
+}
+
+.stat span{
+    color:#94a3b8;
+    font-size:8px;
+}
+
+
+/* ==============================
+   KOCKA
+============================== */
+
+.board{
+    flex:1;
+    min-height:180px;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+}
+
+.cube-area{
+    width:290px;
+    height:290px;
+    perspective:900px;
+    touch-action:none;
+    user-select: none;
+}
+
+.cube{
+    width:174px;
+    height:174px;
+    position:relative;
+    margin:58px auto;
+    transform-style:preserve-3d;
+    transform:
+        rotateX(-28deg)
+        rotateY(-38deg);
+}
+
+.cubie{
+    width:54px;
+    height:54px;
+    position:absolute;
+    transform-style:preserve-3d;
+}
+
+.face{
+    width:54px;
+    height:54px;
+    position:absolute;
+    border:2px solid var(--cube-border,#111);
+    box-shadow:
+        inset 0 0 0 2px #0003;
+    backface-visibility:hidden;
+}
+
+.front{
+    transform:translateZ(27px);
+}
+
+.back{
+    transform:
+        rotateY(180deg)
+        translateZ(27px);
+}
+
+.right{
+    transform:
+        rotateY(90deg)
+        translateZ(27px);
+}
+
+.left{
+    transform:
+        rotateY(-90deg)
+        translateZ(27px);
+}
+
+.top{
+    transform:
+        rotateX(90deg)
+        translateZ(27px);
+}
+
+.bottom{
+    transform:
+        rotateX(-90deg)
+        translateZ(27px);
+}
+
+
+/* ==============================
+   ISTICANJE IZABRANOG SLOJA
+============================== */
+
+.cube.has-sel .cubie .face{
+    filter:brightness(.72);
+    transition:filter .18s ease;
+}
+
+.cube.has-sel .cubie.sel .face{
+    filter:none;
+    border-color:#ffffffcc;
+}
+
+
+/* ==============================
+   VEĆA KOCKA ZA DESKTOP
+============================== */
+@media (min-width: 768px) {
+    .cube-area {
+        width: 420px;
+        height: 420px;
+    }
+
+    .cube {
+        width: 250px;
+        height: 250px;
+        margin: 85px auto;
+    }
+
+    .cubie, .face {
+        width: 78px;
+        height: 78px;
+    }
+
+    .front  { transform: translateZ(39px); }
+    .back   { transform: rotateY(180deg) translateZ(39px); }
+    .right  { transform: rotateY(90deg) translateZ(39px); }
+    .left   { transform: rotateY(-90deg) translateZ(39px); }
+    .top    { transform: rotateX(90deg) translateZ(39px); }
+    .bottom { transform: rotateX(-90deg) translateZ(39px); }
+}
+
+
+/* ==============================
+   DUGMAD
+============================== */
+
+.controls{
+    flex-shrink:0;
+    padding-bottom:3px;
+}
+
+.main-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+}
+
+.main-buttons button{
+    height:44px;
+}
+
+.scramble{
+    background:#0284c7;
+}
+
+.reset{
+    background:#334155;
+}
+
+.secondary-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:6px;
+    margin-top:6px;
+}
+
+.secondary-buttons button{
+    height:35px;
+    font-size:11px;
+}
+
+
+/* ==============================
+   IZBOR STRANE
+============================== */
+
+.move-panel{
+    margin-top:6px;
+    padding:6px 8px;
+    background:#111827ee;
+    border:1px solid #334155;
+    border-radius:14px;
+}
+
+.move-title{
+    text-align:center;
+    color:#94a3b8;
+    font-size:9px;
+    margin-bottom:4px;
+}
+
+.face-buttons{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:4px;
+}
+
+.face-buttons button{
+    height:35px;
+    font-size:11px;
+}
+
+.face-buttons button.active{
+    background:#0284c7;
+}
+
+.direction{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+    margin-top:5px;
+}
+
+.direction button{
+    height:38px;
+    font-size:12px;
+}
+
+.reverse{
+    background:#7c2d12;
+}
+
+.forward{
+    background:#166534;
+}
+
+
+/* ==============================
+   STATUS
+============================== */
+
+.status{
+    text-align:center;
+    height:15px;
+    margin-top:2px;
+    color:#94a3b8;
+    font-size:10px;
+}
+
+
+/* ==============================
+   MODAL
+============================== */
+
+.modal{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:#000d;
+    padding:18px;
+}
+
+.modal.show{
+    display:flex;
+}
+
+.modal-box{
+    width:100%;
+    max-width:370px;
+    max-height:90vh;
+    overflow:auto;
+    padding:23px;
+    border-radius:23px;
+    background:#111827;
+    border:1px solid #475569;
+    text-align:center;
+    box-shadow:0 20px 70px #000;
+}
+
+.modal-box h2{
+    margin:0 0 8px;
+    font-size:29px;
+}
+
+.final-time{
+    margin:13px 0;
+    font-size:35px;
+    font-weight:bold;
+}
+
+.reward{
+    margin:13px 0;
+    padding:12px;
+    border-radius:15px;
+    background:#1e293b;
+}
+
+.reward-title{
+    color:#facc15;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.reward-points{
+    margin-top:6px;
+    font-size:15px;
+}
+
+.unlock{
+    margin-top:10px;
+    padding:12px;
+    border-radius:15px;
+    background:linear-gradient(
+        135deg,
+        #713f12,
+        #854d0e
+    );
+}
+
+.unlock strong{
+    display:block;
+    color:#fde68a;
+    font-size:18px;
+    margin-bottom:4px;
+}
+
+.modal-box button{
+    width:100%;
+    height:49px;
+    margin-top:8px;
+    background:#0284c7;
+}
+
+
+/* ==============================
+   UPUTSTVO
+============================== */
+
+.help{
+    position:fixed;
+    inset:0;
+    z-index:90;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:#000d;
+    padding:18px;
+}
+
+.help.show{
+    display:flex;
+}
+
+.help-box{
+    width:100%;
+    max-width:390px;
+    max-height:90vh;
+    overflow:auto;
+    padding:21px;
+    border-radius:22px;
+    background:#111827;
+    border:1px solid #475569;
+}
+
+.help-box h2{
+    text-align:center;
+    margin-top:0;
+}
+
+.help-box h3{
+    color:#38bdf8;
+    margin-bottom:5px;
+}
+
+.help-box p{
+    color:#cbd5e1;
+    font-size:13px;
+    line-height:1.5;
+}
+
+.help-box button{
+    width:100%;
+    height:46px;
+    margin-top:8px;
+    background:#0284c7;
+}
+
+
+/* ==============================
+   IZGLEDI KOCKE
+============================== */
+
+.themes{
+    position:fixed;
+    inset:0;
+    z-index:80;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:#000d;
+    padding:16px;
+}
+
+.themes.show{
+    display:flex;
+}
+
+.theme-box{
+    width:100%;
+    max-width:390px;
+    max-height:90vh;
+    overflow:auto;
+    padding:20px;
+    border-radius:22px;
+    background:#111827;
+    border:1px solid #475569;
+}
+
+.theme-box h2{
+    text-align:center;
+    margin-top:0;
+}
+
+.theme-info{
+    text-align:center;
+    color:#94a3b8;
+    font-size:12px;
+    margin-bottom:10px;
+}
+
+.theme-list{
+    display:grid;
+    gap:8px;
+}
+
+.theme-item{
+    display:grid;
+    grid-template-columns:54px 1fr auto;
+    align-items:center;
+    gap:10px;
+    padding:9px;
+    border-radius:15px;
+    background:#1e293b;
+    border:1px solid #334155;
+}
+
+.theme-preview{
+    width:50px;
+    height:50px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:25px;
+}
+
+.theme-name{
+    font-weight:bold;
+}
+
+.theme-requirement{
+    color:#94a3b8;
+    font-size:10px;
+    margin-top:3px;
+}
+
+.theme-item button{
+    padding:9px 10px;
+    font-size:11px;
+}
+
+.theme-item button.selected{
+    background:#166534;
+}
+
+.theme-item button.locked{
+    background:#475569;
+    color:#cbd5e1;
+}
+
+.close-theme{
+    width:100%;
+    height:45px;
+    margin-top:10px;
+    background:#0284c7;
+}
+
+
+@keyframes cubePop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+}
+
+.cube-area.win{
+    animation: cubePop 1.4s ease-in-out;
+}
+
+.confetti{
+    position:fixed;
+    top:-20px;
+    width:10px;
+    height:14px;
+    z-index:200;
+    pointer-events:none;
+    animation: confettiFall linear forwards;
+}
+
+@keyframes confettiFall {
+    to {
+        transform: translate3d(var(--drift), 110vh, 0) rotate(var(--spin));
+    }
+}
+
+
+
+button:focus, 
+button:focus-visible {
+    outline: none !important;
+}
+
+/* ==============================
+   DUGME ZA ZVUK
+============================== */
+
+.header{
+    position:relative;
+}
+
+.sound-btn{
+    position:absolute;
+    top:0;
+    right:0;
+    width:44px;
+    height:38px;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#e2e8f0;
+}
+
+.fullscreen-btn{
+    left:0;
+    right:auto;
+}
+
+.sound-btn .mute-x{
+    display:none;
+}
+
+.sound-btn.off{
+    color:#94a3b8;
+}
+
+.sound-btn.off .waves{
+    display:none;
+}
+
+.sound-btn.off .mute-x{
+    display:block;
+}
+
+
+
+button{
+    transition:
+        transform .12s ease,
+        filter .15s ease,
+        box-shadow .15s ease,
+        background-color .15s ease;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+@media (hover:hover) and (pointer:fine){
+
+    button:not(:disabled):hover{
+        filter:brightness(1.18);
+        transform:translateY(-1px);
+        box-shadow:0 6px 16px #000a, inset 0 0 0 1px #ffffff22;
+    }
+
+    .scramble:not(:disabled):hover{
+        box-shadow:0 6px 18px #0284c788, inset 0 0 0 1px #ffffff22;
+    }
+
+    .forward:not(:disabled):hover{
+        box-shadow:0 6px 18px #16a34a88, inset 0 0 0 1px #ffffff22;
+    }
+
+    .reverse:not(:disabled):hover{
+        box-shadow:0 6px 18px #ea580c88, inset 0 0 0 1px #ffffff22;
+    }
+
+    button:not(:disabled):active{
+        transform:scale(.96);
+        filter:brightness(.95);
+    }
+}
+
+@media (hover:none){
+    button:not(:disabled):active{
+        transform:scale(.95);
+        filter:brightness(1.25);
+    }
+}
+
+.face-buttons button.active{
+    background:#0284c7;
+    box-shadow:0 0 0 2px #7dd3fc, 0 0 14px #0284c799;
+}
+
+button:disabled{
+    transition:none;
+    filter:none;
+}
+
+
+
+@media (max-width:767px){
+
+    .cube.has-sel .cubie .face{
+        filter:brightness(.5) saturate(.8);
+    }
+
+    .cube.has-sel .cubie.sel .face{
+        filter:brightness(1.1);
+        border-color:#fff;
+        box-shadow:inset 0 0 0 3px #ffffffcc;
+    }
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- NASLOV -->
+
+        <div class="header">
+        
+        <button id="fullscreenBtn" class="sound-btn fullscreen-btn" title="Fullscreen">
+    ⛶
+</button>
+
+        <button id="soundBtn" class="sound-btn" title="Zvuk">
+
+            <svg viewBox="0 0 24 24" width="26" height="26"
+                 fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+
+                <g class="waves">
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                </g>
+
+                <g class="mute-x">
+                    <line x1="23" y1="9" x2="17" y2="15"/>
+                    <line x1="17" y1="9" x2="23" y2="15"/>
+                </g>
+
+            </svg>
+
+        </button>
+
+        <h1>🧊 Okreni Obrni 3D</h1>
+
+
+        <p>
+            Složi kocku, osvajaj poene i otključavaj nove izglede
+        </p>
+
+    </div>
+
+
+    <!-- STATISTIKA -->
+
+    <div class="stats">
+
+        <div class="stat">
+            <strong id="timer">00:00.00</strong>
+            <span>VREME</span>
+        </div>
+
+        <div class="stat">
+            <strong id="moves">0</strong>
+            <span>POTEZI</span>
+        </div>
+
+        <div class="stat">
+            <strong id="points">0</strong>
+            <span>POENI</span>
+        </div>
+
+        <div class="stat">
+            <strong id="solved">0</strong>
+            <span>SLOŽENO</span>
+        </div>
+
+        <div class="stat">
+            <strong id="best">--:--.--</strong>
+            <span>REKORD</span>
+        </div>
+
+    </div>
+
+
+    <!-- KOCKA -->
+
+    <div class="board">
+
+        <div
+            class="cube-area"
+            id="cubeArea">
+
+            <div
+                class="cube"
+                id="cube">
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- KONTROLE -->
+
+    <div class="controls">
+
+        <div class="main-buttons">
+
+            <button
+                class="scramble"
+                id="scrambleBtn">
+
+                🔀 PROMEŠAJ KOCKU
+
+            </button>
+
+
+            <button
+                class="reset"
+                id="resetBtn">
+
+                ↻ NOVA IGRA
+
+            </button>
+
+        </div>
+
+
+        <div class="secondary-buttons">
+
+            <button id="themeBtn">
+                🎨 IZGLED
+            </button>
+
+            <button id="helpBtn">
+                📖 UPUTSTVO
+            </button>
+
+            <button id="resetViewBtn">
+                👁 POGLED
+            </button>
+
+        </div>
+
+
+        <!-- STRANE -->
+
+        <div class="move-panel">
+
+            <div class="move-title">
+                IZABERI STRANU KOJU ŽELIŠ DA OKRENEŠ
+            </div>
+
+
+            <div class="face-buttons">
+
+                <button data-face="U">
+                    GORE
+                </button>
+
+                <button data-face="D">
+                    DOLE
+                </button>
+
+                <button data-face="L">
+                    LEVO
+                </button>
+
+                <button data-face="R">
+                    DESNO
+                </button>
+
+                <button data-face="F">
+                    NAPRED
+                </button>
+
+                <button data-face="B">
+                    NAZAD
+                </button>
+
+                
+                <button data-face="M">
+                    M
+                </button>
+
+                <button data-face="E">
+                    E
+                </button>
+
+                <button data-face="S">
+                    S
+                </button>
+
+            </div>
+
+
+            <div class="direction">
+
+                <button
+                    class="reverse"
+                    id="reverseBtn">
+
+                    ↶ OKRENI LEVO
+
+                </button>
+
+
+                <button
+                    class="forward"
+                    id="forwardBtn">
+
+                    ↷ OKRENI DESNO
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="status" id="status">
+            Pritisni „Promešaj kocku“ da počneš igru
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ============================
+     EKRAN POBEDE
+============================= -->
+
+<div
+    class="modal"
+    id="winModal">
+
+    <div class="modal-box">
+
+        <h2>
+            🎉 BRAVO!
+        </h2>
+
+        <p>Čestitamo! Uspešno si rešio Okreni Obrni 3D!</p>
+
+
+        <div
+            class="final-time"
+            id="finalTime">
+
+            00:00.00
+
+        </div>
+
+
+        <p id="finalMoves">
+            0 poteza
+        </p>
+
+
+        <div class="reward">
+
+            <div class="reward-title">
+                🏆 NAGRADA
+            </div>
+
+            <div
+                class="reward-points"
+                id="rewardPoints">
+
+                +100 poena
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="unlock"
+            id="unlockBox"
+            style="display:none;">
+
+            <strong>
+                🔓 NOVI IZGLED JE OTKLJUČAN!
+            </strong>
+
+            <span id="unlockName"></span>
+
+        </div>
+
+
+        <button id="closeWin">
+            NASTAVI IGRU
+        </button>
+
+
+        <button
+            id="newAfterWin"
+            style="background:#334155;">
+
+            NOVA IGRA
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ============================
+     UPUTSTVO
+============================= -->
+
+<div
+    class="help"
+    id="help">
+
+    <div class="help-box">
+
+        <h2>
+            📖 Kako se igra?
+        </h2>
+
+
+        <h3>
+            🎯 Cilj igre
+        </h3>
+
+        <p>
+            Tvoj cilj je da složiš Okreni Obrni 3D kocku tako da svaka strana bude sastavljena od jedne boje.
+        </p>
+
+
+        <h3>
+            🔀 Početak
+        </h3>
+
+        <p>
+            Pritisni „Promešaj kocku“ da napraviš novu slagalicu
+            i otključaš kontrole za igru.
+        </p>
+
+
+        <h3>
+            🔄 Okretanje
+        </h3>
+
+        <p>
+            Prvo izaberi stranu ili srednji sloj, zatim izaberi smer okretanja.
+            Srednji slojevi su:
+        </p>
+
+        <p>
+            <b>M</b> – sloj između leve i desne strane<br>
+            <b>E</b> – sloj između gornje i donje strane<br>
+            <b>S</b> – sloj između prednje i zadnje strane
+        </p>
+
+
+        <h3>
+            👆 Pogled
+        </h3>
+
+        <p>
+            Prevlači prstom (ili mišem) pored kocke da je vidiš iz različitih uglova.
+        </p>
+
+
+        <h3>
+            ☝️ Okretanje prstom
+        </h3>
+
+        <p>
+            Kada je kocka promešana, možeš da okrećeš slojeve i bez
+            dugmadi: prevuci preko bilo kog reda ili kolone (i srednjih) u
+            smeru u kom želiš da ih okreneš. Dugmad i tastatura
+            rade kao i pre.
+        </p>
+
+
+        <h3>
+            ⌨️ Tastatura
+        </h3>
+
+        <p>
+            Na računaru možeš da okrećeš slojeve slovima
+            <b>U, D, L, R, F, B, M, E, S</b>.
+            Slovo okreće sloj u jednom smeru, a <b>Shift + slovo</b>
+            u suprotnom smeru.
+        </p>
+
+
+        <h3>
+            🏆 Nagrade
+        </h3>
+
+        <p>
+            Svaki put kada složiš kocku dobijaš poene.
+            Što više kocki rešiš, otključavaš više izgleda.
+        </p>
+
+
+        <h3>
+            🎨 Izgledi
+        </h3>
+
+        <p>
+            U meniju „Izgled“ možeš da izabereš otključanu temu
+            i promeniš izgled kocke.
+        </p>
+
+
+        <h3>
+            💾 Čuvanje napretka
+        </h3>
+
+        <p>
+            Tvoj broj poena, rešene kocke, rekord i otključani
+            izgledi automatski se čuvaju na uređaju.
+        </p>
+
+
+        <button id="closeHelp">
+            RAZUMEM
+        </button>
+
+    </div>
+
+</div>
+
+<!-- ============================
+     TEME
+============================= -->
+
+<div
+    class="themes"
+    id="themes">
+
+    <div class="theme-box">
+
+        <h2>
+            🎨 Izgled kocke
+        </h2>
+
+        <div class="theme-info">
+            Otključaj nove izglede rešavanjem kocke.
+        </div>
+
+
+        <div
+            class="theme-list"
+            id="themeList">
+        </div>
+
+
+        <button
+            class="close-theme"
+            id="closeThemes">
+
+            ZATVORI
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ==========================================================
+   BOJE ZA OKRENI OBRNI 3D
+========================================================== */
+
+const BASE_COLORS = {
+
+    U:"#ffffff",
+    D:"#ffd500",
+    F:"#009b48",
+    B:"#0046ad",
+    R:"#b71234",
+    L:"#ff5800"
+
+};
+
+
+/* ==========================================================
+   TEME
+========================================================== */
+
+const THEMES = [
+
+    {
+        id:"classic",
+        name:"🏰 Klasična",
+        requirement:0,
+        description:"Klasične boje Okreni Obrni 3D.",
+        colors:{
+            U:"#ffffff",
+            D:"#ffd500",
+            F:"#009b48",
+            B:"#0046ad",
+            R:"#b71234",
+            L:"#ff5800"
+        },
+        border:"#111111",
+        background:"radial-gradient(circle at 50% 10%, #263b58 0%, #0b1220 55%, #020409 100%)",
+        preview:"🧊"
+    },
+
+    {
+        id:"wood",
+        name:"🪵 Drvena",
+        requirement:1,
+        description:"Topao izgled inspirisan drvenom kockom.",
+        colors:{
+            U:"#f3e6c8",
+            D:"#e0b040",
+            F:"#6f9a5a",
+            B:"#4f78a0",
+            R:"#b23a2e",
+            L:"#d9822b"
+        },
+        border:"#3b2415",
+        background:"radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.6) 100%), repeating-linear-gradient(90deg, rgba(0,0,0,0.5) 0px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 120px), repeating-linear-gradient(90deg, rgba(255,210,150,0.06) 0px, rgba(255,210,150,0.06) 1px, rgba(255,210,150,0) 1px, rgba(255,210,150,0) 9px), repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 23px), linear-gradient(180deg, #4a3020 0%, #2a1a10 100%)",
+        texture:"radial-gradient(circle at 50% 50%, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0) 88%), repeating-radial-gradient(circle at 50% 50%, rgba(70,35,10,0) 0px, rgba(70,35,10,0) 5px, rgba(70,35,10,0.20) 6.2px, rgba(70,35,10,0) 7.6px, rgba(70,35,10,0) 9.3px), repeating-radial-gradient(circle at 52% 48%, rgba(70,35,10,0) 0px, rgba(70,35,10,0) 8px, rgba(70,35,10,0.12) 9.2px, rgba(70,35,10,0) 10.6px, rgba(70,35,10,0) 14.6px), repeating-radial-gradient(circle at 49% 51%, rgba(70,35,10,0) 0px, rgba(70,35,10,0) 2.5px, rgba(70,35,10,0.06) 3.3px, rgba(70,35,10,0) 4.2px, rgba(70,35,10,0) 5.6px), radial-gradient(circle 23px at 22% 30%, rgba(70,35,10,0.10), rgba(70,35,10,0)), radial-gradient(circle 20px at 78% 68%, rgba(70,35,10,0.09), rgba(70,35,10,0)), radial-gradient(circle 17px at 30% 85%, rgba(255,235,200,0.09), rgba(255,235,200,0))",        
+        preview:"🪵"
+    },
+
+    {
+        id:"gold",
+        name:"🪙 Zlatna",
+        requirement:3,
+        description:"Sjajni kraljevski izgled.",
+        colors:{
+            U:"#fff8e1",
+            D:"#ffc107",
+            F:"#2e9e6b",
+            B:"#3a5fb0",
+            R:"#c0392b",
+            L:"#e8692a"
+        },
+        border:"#5c4500",
+        background:"radial-gradient(circle at 50% 10%, #5a4510 0%, #1f1806 55%, #080602 100%)",
+        texture:"linear-gradient(135deg, rgba(255,255,255,0.40) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 60%, rgba(0,0,0,0.18) 100%)",
+        preview:"🪙"
+    },
+
+    {
+        id:"space",
+        name:"🌌 Svemirska",
+        requirement:5,
+        description:"Tamni futuristički izgled.",
+        colors:{
+            U:"#dbeafe",
+            D:"#facc15",
+            F:"#34d399",
+            B:"#3b82f6",
+            R:"#f43f5e",
+            L:"#a855f7"
+        },
+        border:"#020617",
+        background:"radial-gradient(1.5px 1.5px at 30px 40px, rgba(255,255,255,0.95), rgba(255,255,255,0)) 0 0 / 220px 220px, radial-gradient(1.2px 1.2px at 120px 90px, rgba(255,255,255,0.8), rgba(255,255,255,0)) 0 0 / 310px 310px, radial-gradient(1.2px 1.2px at 60px 170px, rgba(200,220,255,0.9), rgba(200,220,255,0)) 0 0 / 260px 260px, radial-gradient(2px 2px at 200px 140px, rgba(255,255,255,0.9), rgba(255,255,255,0)) 0 0 / 400px 400px, radial-gradient(circle at 85% 88%, rgba(168,85,247,0.25) 0%, rgba(168,85,247,0) 40%), radial-gradient(circle at 50% 8%, rgba(99,102,241,0.30) 0%, rgba(99,102,241,0) 45%), radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0a0a1f 55%, #02020a 100%)",
+        texture:"radial-gradient(circle at 30% 25%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 55%), linear-gradient(to right, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,0.30) 100%), linear-gradient(to bottom, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(0,0,40,0.30) 100%)",
+        preview:"🌌"
+    },
+
+    {
+        id:"mystic",
+        name:"🔮 Mistična",
+        requirement:10,
+        description:"Tajanstvene boje magičnog sveta.",
+        colors:{
+            U:"#f8f0ff",
+            D:"#fde047",
+            F:"#4ade80",
+            B:"#4f6bed",
+            R:"#e11d48",
+            L:"#d946ef"
+        },
+        border:"#25103b",
+        background:"radial-gradient(3.2px 3.2px at 60px 80px, rgba(253,224,71,0.95), rgba(253,224,71,0)) 0 0 / 467px 431px, radial-gradient(2.8px 2.8px at 300px 220px, rgba(244,114,182,0.9), rgba(244,114,182,0)) 0 0 / 523px 389px, radial-gradient(2.6px 2.6px at 120px 330px, rgba(103,232,249,0.85), rgba(103,232,249,0)) 0 0 / 397px 461px, radial-gradient(2px 2px at 240px 60px, rgba(255,255,255,0.9), rgba(255,255,255,0)) 0 0 / 331px 503px, radial-gradient(2.4px 2.4px at 400px 140px, rgba(196,181,253,0.85), rgba(196,181,253,0)) 0 0 / 611px 347px, radial-gradient(circle 55vmin at 15% 70%, rgba(45,212,191,0.14) 0%, rgba(45,212,191,0) 100%), radial-gradient(circle 65vmin at 85% 92%, rgba(217,70,239,0.24) 0%, rgba(217,70,239,0) 100%), radial-gradient(circle 60vmin at 50% 8%, rgba(129,140,248,0.24) 0%, rgba(129,140,248,0) 100%), radial-gradient(circle at 50% 10%, #3b1d5e 0%, #170a2b 55%, #07030f 100%)",
+        texture:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='white' stroke-width='2.2'%3E%3Crect x='18' y='18' width='64' height='64' stroke-opacity='.42'/%3E%3Crect x='28' y='28' width='44' height='44' stroke-opacity='.36'/%3E%3Crect x='38' y='38' width='24' height='24' stroke-opacity='.32'/%3E%3C/g%3E%3C/svg%3E"), radial-gradient(circle closest-side at 50% 50%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 80%), linear-gradient(90deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0) 90%, rgba(255,255,255,0.16) 100%), linear-gradient(0deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0) 90%, rgba(255,255,255,0.16) 100%), radial-gradient(circle closest-corner at 50% 50%, rgba(40,10,70,0) 60%, rgba(40,10,70,0.28) 100%)`,        
+        preview:"🔮"
+    },
+
+    {
+        id:"diamond",
+        name:"💎 Dijamantska",
+        requirement:20,
+        description:"Poseban izgled za iskusne igrače.",
+        colors:{
+            U:"#f8fafc",
+            D:"#ffd23f",
+            F:"#2fd39b",
+            B:"#3b82f6",
+            R:"#ef4466",
+            L:"#a06cf0"
+        },
+        border:"#172554",
+        background:"radial-gradient(circle at 50% 10%, #1e3a8a 0%, #16456b 35%, #0a1c33 65%, #030812 100%), radial-gradient(circle at 30% 20%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 25%), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 30%)",
+        texture:"linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.25) 60%, rgba(255,255,255,0.15) 100%), linear-gradient(45deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.3) 100%)",
+        preview:"💎"
+    }
+
+];
+
+
+/* ==========================================================
+   STANJE KOCKE
+========================================================== */
+
+let stickers = {};
+
+let selectedFace = "U";
+
+let moveCount = 0;
+
+let history = [];
+
+let elapsed = 0;
+
+let running = false;
+
+let gameStarted = false;
+
+let timerInterval = null;
+
+let startTime = 0;
+
+let soundEnabled = true;
+
+/* ==========================================================
+   POGLED
+========================================================== */
+
+let rotX = -28;
+
+let rotY = -38;
+
+let dragging = false;
+
+let lastX = 0;
+
+let lastY = 0;
+
+
+/* ==========================================================
+   PODACI IGRAČA
+========================================================== */
+
+let playerData = {
+
+    points:0,
+
+    solved:0,
+
+    best:0,
+
+    selectedTheme:"classic",
+
+    unlocked:[
+        "classic"
+    ]
+
+};
+
+
+/* ==========================================================
+   UČITAVANJE PODATAKA
+========================================================== */
+
+function loadPlayerData(){
+
+    try{
+
+        const saved =
+            localStorage.getItem(
+                "rubikPlayerData"
+            );
+
+
+        if(saved){
+
+            const parsed =
+                JSON.parse(saved);
+
+
+            playerData = {
+
+                ...playerData,
+
+                ...parsed
+
+            };
+
+        }
+
+    }
+    catch(error){
+
+        console.log(
+            "Podaci nisu mogli biti učitani."
+        );
+
+    }
+
+
+    if(
+        !Array.isArray(
+            playerData.unlocked
+        )
+    ){
+
+        playerData.unlocked =
+            ["classic"];
+
+    }
+
+
+    if(
+        !playerData.unlocked.includes(
+            "classic"
+        )
+    ){
+
+        playerData.unlocked.unshift(
+            "classic"
+        );
+
+    }
+
+
+    updateStats();
+
+    applyTheme();
+
+}
+
+
+/* ==========================================================
+   ČUVANJE PODATAKA
+========================================================== */
+
+function savePlayerData(){
+
+    localStorage.setItem(
+        "rubikPlayerData",
+        JSON.stringify(
+            playerData
+        )
+    );
+
+}
+
+
+/* ==========================================================
+   STATISTIKA
+========================================================== */
+
+function updateStats(){
+
+    document
+    .getElementById("points")
+    .textContent =
+        playerData.points;
+
+
+    document
+    .getElementById("solved")
+    .textContent =
+        playerData.solved;
+
+
+    document
+    .getElementById("best")
+    .textContent =
+
+        playerData.best
+        ? formatTime(playerData.best)
+        : "--:--.--";
+
+}
+
+
+/* ==========================================================
+   KONTROLA DOSTUPNOSTI DUGMADI ZA OKRETANJE
+========================================================== */
+
+function setControlsEnabled(enabled){
+    
+    document.querySelectorAll("[data-face]").forEach(b => b.disabled = !enabled);
+    
+    
+    document.getElementById("forwardBtn").disabled = true;
+    document.getElementById("reverseBtn").disabled = true;
+
+    const movePanel = document.querySelector(".move-panel");
+    movePanel.style.opacity = enabled ? "1" : "0.5";
+}
+
+/* ==========================================================
+   KREIRANJE REŠENE KOCKE
+========================================================== */
+
+function resetState(){
+
+    stickers = {};
+
+
+    for(
+        let x=-1;
+        x<=1;
+        x++
+    ){
+
+        for(
+            let y=-1;
+            y<=1;
+            y++
+        ){
+
+            for(
+                let z=-1;
+                z<=1;
+                z++
+            ){
+
+                if(z === 1){
+
+                    stickers[
+                        `${x},${y},${z},F`
+                    ] = "F";
+
+                }
+
+
+                if(z === -1){
+
+                    stickers[
+                        `${x},${y},${z},B`
+                    ] = "B";
+
+                }
+
+
+                if(x === 1){
+
+                    stickers[
+                        `${x},${y},${z},R`
+                    ] = "R";
+
+                }
+
+
+                if(x === -1){
+
+                    stickers[
+                        `${x},${y},${z},L`
+                    ] = "L";
+
+                }
+
+
+                if(y === 1){
+
+                    stickers[
+                        `${x},${y},${z},U`
+                    ] = "U";
+
+                }
+
+
+                if(y === -1){
+
+                    stickers[
+                        `${x},${y},${z},D`
+                    ] = "D";
+
+                }
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* ==========================================================
+   KREIRANJE KOCKE
+========================================================== */
+
+function createCube(){
+
+    const cube =
+        document.getElementById(
+            "cube"
+        );
+
+
+    cube.innerHTML = "";
+
+
+    for(
+        let x=-1;
+        x<=1;
+        x++
+    ){
+
+        for(
+            let y=-1;
+            y<=1;
+            y++
+        ){
+
+            for(
+                let z=-1;
+                z<=1;
+                z++
+            ){
+
+                const cubie =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                cubie.className =
+                    "cubie";
+
+
+                cubie.dataset.x = x;
+
+                cubie.dataset.y = y;
+
+                cubie.dataset.z = z;
+
+
+                const faces = [
+
+                    ["F",z === 1,"front"],
+
+                    ["B",z === -1,"back"],
+
+                    ["R",x === 1,"right"],
+
+                    ["L",x === -1,"left"],
+
+                    ["U",y === 1,"top"],
+
+                    ["D",y === -1,"bottom"]
+
+                ];
+
+
+                faces.forEach(
+                    data => {
+
+
+
+                        const face =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        face.className =
+                            "face " +
+                            data[2];
+
+
+                        face.dataset.face =
+                            data[0];
+
+
+                        cubie.appendChild(
+                            face
+                        );
+
+                    }
+                );
+
+
+                cube.appendChild(
+                    cubie
+                );
+
+            }
+
+        }
+
+    }
+
+
+    render();
+
+}
+
+/* ==========================================================
+   ISTICANJE IZABRANOG SLOJA
+========================================================== */
+
+
+function inLayer(x, y, z, f){
+    return {
+        R: x ===  1,
+        L: x === -1,
+        M: x ===  0, 
+        U: y ===  1,
+        D: y === -1,
+        E: y ===  0, 
+        F: z ===  1,
+        B: z === -1,
+        S: z ===  0  
+    }[f];
+}
+
+/* ==========================================================
+   PRIKAZ
+========================================================== */
+
+function render(){
+
+    const cube =
+        document.getElementById(
+            "cube"
+        );
+
+
+    cube.style.transform =
+        `rotateX(${rotX}deg)
+         rotateY(${rotY}deg)`;
+
+    
+    const step = window.innerWidth >= 768 ? 84 : 58;
+
+    const hasSel = gameStarted && !!selectedFace;
+    cube.classList.toggle("has-sel", hasSel);
+
+
+    [...cube.children]
+    .forEach(cubie => {
+
+        const x =
+            +cubie.dataset.x;
+
+        const y =
+            +cubie.dataset.y;
+
+        const z =
+            +cubie.dataset.z;
+
+
+        cubie.classList.toggle(
+            "sel",
+            hasSel && inLayer(x, y, z, selectedFace)
+        );
+
+
+        cubie.style.transform =
+            `translate3d(
+                ${x * step}px,
+                ${-y * step}px,
+                ${z * step}px
+            )`;
+
+
+        [
+            ...cubie.children
+        ]
+        .forEach(face => {
+
+            const f =
+                face.dataset.face;
+
+
+            const color =
+                stickers[
+                    `${x},${y},${z},${f}`
+                ];
+
+
+            const theme =
+                getCurrentTheme();
+
+
+            face.style.backgroundColor =
+                theme.colors[color]
+                || "#111";
+
+            face.style.backgroundImage =
+                theme.texture
+                || "none";
+
+            face.style.backgroundSize = "100% 100%";
+
+        });
+
+    });
+
+}
+
+
+/* ==========================================================
+   TRENUTNA TEMA
+========================================================== */
+
+function getCurrentTheme(){
+
+    return THEMES.find(
+        theme =>
+            theme.id ===
+            playerData.selectedTheme
+    ) || THEMES[0];
+
+}
+
+
+/* ==========================================================
+   PRIMENA TEME
+========================================================== */
+
+function applyTheme(){
+
+    const theme =
+        getCurrentTheme();
+
+
+    document
+    .documentElement
+    .style
+    .setProperty(
+        "--cube-border",
+        theme.border
+    );
+
+
+    document
+    .documentElement
+    .style
+    .setProperty(
+        "--page-bg",
+        theme.background
+    );
+
+
+    render();
+
+}
+
+/* ==========================================================
+   ROTACIJA VEKTORA
+========================================================== */
+
+function rotateVector(v, axis, dir){
+
+    const [x,y,z] = v;
+
+
+    if(axis === "x"){
+
+        return dir === 1
+            ? [x,-z,y]
+            : [x,z,-y];
+
+    }
+
+
+    if(axis === "y"){
+
+        return dir === 1
+            ? [z,y,-x]
+            : [-z,y,x];
+
+    }
+
+
+    return dir === 1
+        ? [-y,x,z]
+        : [y,-x,z];
+
+}
+
+
+/* ==========================================================
+   ROTACIJA STIKERA
+========================================================== */
+
+function rotateFace(face, axis, dir){
+
+    const normals = {
+
+        F:[0,0,1],
+        B:[0,0,-1],
+
+        R:[1,0,0],
+        L:[-1,0,0],
+
+        U:[0,1,0],
+        D:[0,-1,0]
+
+    };
+
+
+    const names = {
+
+        "0,0,1":"F",
+        "0,0,-1":"B",
+
+        "1,0,0":"R",
+        "-1,0,0":"L",
+
+        "0,1,0":"U",
+        "0,-1,0":"D"
+
+    };
+
+
+    const result =
+        rotateVector(
+            normals[face],
+            axis,
+            dir
+        );
+
+
+    return names[
+        result.join(",")
+    ];
+
+}
+
+
+/* ==========================================================
+   POTEZ
+========================================================== */
+
+function doMove(
+    moveName,
+    saveHistory = true
+){
+
+    const base =
+        moveName[0];
+
+
+    const turns =
+        moveName.includes("2")
+        ? 2
+        : 1;
+
+
+    const clockwiseDirection = {
+        U: -1, D:  1, E: -1,
+        R: -1, L:  1, M:  1,
+        F: -1, B:  1, S: -1
+    };
+
+
+    let dir =
+        clockwiseDirection[base];
+
+
+    if(moveName.includes("'")){
+
+        dir *= -1;
+
+    }
+
+
+    const axis = {
+        R:"x", L:"x", M:"x",
+        U:"y", D:"y", E:"y",
+        F:"z", B:"z", S:"z"
+    }[base];
+
+
+    const layer = {
+        R: 1, L: -1, M: 0,
+        U: 1, D: -1, E: 0,
+        F: 1, B: -1, S: 0
+    }[base];
+
+
+    for(
+        let t=0;
+        t<turns;
+        t++
+    ){
+
+        const next = {};
+
+
+        for(
+            const key in stickers
+        ){
+
+            const parts =
+                key.split(",");
+
+
+            const x =
+                +parts[0];
+
+            const y =
+                +parts[1];
+
+            const z =
+                +parts[2];
+
+            const face =
+                parts[3];
+
+
+            const coordinate =
+                {x,y,z}[axis];
+
+
+            if(
+                coordinate === layer
+            ){
+
+                const position =
+                    rotateVector(
+                        [x,y,z],
+                        axis,
+                        dir
+                    );
+
+
+                const newFace =
+                    rotateFace(
+                        face,
+                        axis,
+                        dir
+                    );
+
+
+                const newKey =
+                    `${position[0]},${position[1]},${position[2]},${newFace}`;
+
+
+                next[newKey] =
+                    stickers[key];
+
+            }
+            else{
+
+                next[key] =
+                    stickers[key];
+
+            }
+
+        }
+
+
+        stickers =
+            next;
+
+    }
+
+
+    if(saveHistory){
+
+
+        playRotateSound();
+
+        history.push(
+            moveName
+        );
+
+
+        moveCount++;
+
+
+        document
+        .getElementById("moves")
+        .textContent =
+            moveCount;
+
+
+        if(!running){
+
+            startTimer();
+
+        }
+
+
+        checkSolved();
+
+    }
+
+
+    render();
+
+}
+
+
+/* ==========================================================
+   ANIMACIJA OKRETANJA SLOJA
+========================================================== */
+
+const ANIM_MS = 220;      
+
+const SCRAMBLE_MS = 100;  
+
+let animating = false;
+
+let moveQueue = [];
+
+let animToken = 0;
+
+
+function playMove(moveName){
+
+    moveQueue.push(moveName);
+
+    if(!animating){
+        runNextMove();
+    }
+
+}
+
+
+function runNextMove(){
+
+    if(moveQueue.length === 0){
+        animating = false;
+        return;
+    }
+
+    animating = true;
+
+    const moveName = moveQueue.shift();
+
+    animateLayer(moveName, () => {
+
+        doMove(moveName);
+
+        
+        if(!gameStarted){
+            moveQueue = [];
+        }
+
+        runNextMove();
+
+    });
+
+}
+
+
+function cancelMoveAnimation(){
+
+    moveQueue = [];
+
+    animating = false;
+
+    animToken++;
+
+}
+
+
+function animateLayer(moveName, done, duration = ANIM_MS){
+
+    const token = animToken;
+
+    const base = moveName[0];
+
+    const turns = moveName.includes("2") ? 2 : 1;
+
+    const clockwiseDirection = {
+        U: -1, D:  1, E: -1,
+        R: -1, L:  1, M:  1,
+        F: -1, B:  1, S: -1
+    };
+
+    const axis = {
+        R:"x", L:"x", M:"x",
+        U:"y", D:"y", E:"y",
+        F:"z", B:"z", S:"z"
+    }[base];
+
+    const layer = {
+        R: 1, L: -1, M: 0,
+        U: 1, D: -1, E: 0,
+        F: 1, B: -1, S: 0
+    }[base];
+
+    let dir = clockwiseDirection[base];
+
+    if(moveName.includes("'")){
+        dir *= -1;
+    }
+
+    
+    const sign = axis === "y" ? 1 : -1;
+
+    const target = sign * dir * 90 * turns;
+
+    const step = window.innerWidth >= 768 ? 84 : 58;
+
+    const cubies = [
+        ...document.getElementById("cube").children
+    ].filter(c => +c.dataset[axis] === layer);
+
+    const t0 = performance.now();
+
+    function frame(now){
+
+        if(token !== animToken){
+            return;
+        }
+
+        const t = Math.max(0, Math.min((now - t0) / duration, 1));
+
+        const ease = t < .5
+            ? 2 * t * t
+            : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        const angle = target * ease;
+
+        cubies.forEach(c => {
+
+            const x = +c.dataset.x;
+            const y = +c.dataset.y;
+            const z = +c.dataset.z;
+
+            c.style.transform =
+                `rotate${axis.toUpperCase()}(${angle}deg)
+                 translate3d(
+                    ${x * step}px,
+                    ${-y * step}px,
+                    ${z * step}px
+                 )`;
+
+        });
+
+        if(t < 1){
+            requestAnimationFrame(frame);
+        }
+        else{
+            done();
+        }
+
+    }
+
+    requestAnimationFrame(frame);
+
+}
+
+/* ==========================================================
+   TAJMER
+========================================================== */
+
+function startTimer(){
+
+    running = true;
+
+
+    startTime =
+        performance.now()
+        - elapsed;
+
+
+    timerInterval =
+        setInterval(
+            ()=>{
+
+                elapsed =
+                    performance.now()
+                    - startTime;
+
+
+                document
+                .getElementById(
+                    "timer"
+                )
+                .textContent =
+                    formatTime(
+                        elapsed
+                    );
+
+            },
+            30
+        );
+
+}
+
+
+function stopTimer(){
+
+    running = false;
+
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    timerInterval = null;
+
+}
+
+
+function formatTime(ms){
+
+    const minutes =
+        Math.floor(
+            ms / 60000
+        );
+
+
+    const seconds =
+        Math.floor(
+            ms / 1000
+        ) % 60;
+
+
+    const hundredths =
+        Math.floor(
+            ms % 1000 / 10
+        );
+
+
+    return (
+
+        String(minutes)
+        .padStart(2,"0")
+
+        + ":"
+
+        + String(seconds)
+        .padStart(2,"0")
+
+        + "."
+
+        + String(hundredths)
+        .padStart(2,"0")
+
+    );
+
+}
+
+
+/* ==========================================================
+   PROVERA REŠENOSTI
+========================================================== */
+
+function isSolved(){
+
+    const faceColor = {};
+
+    for(const key in stickers){
+
+        const face = key.split(",")[3];
+
+        if(faceColor[face] === undefined){
+            faceColor[face] = stickers[key];
+        }
+        else if(faceColor[face] !== stickers[key]){
+            return false;
+        }
+
+    }
+
+    return true;
+
+}
+
+
+/* ==========================================================
+   NAGRADA
+========================================================== */
+
+function calculateReward(){
+
+    let reward = 100;
+
+
+    if(elapsed < 60000){
+
+        reward += 100;
+
+    }
+    else if(elapsed < 120000){
+
+        reward += 50;
+
+    }
+
+
+    if(moveCount <= 40){
+
+        reward += 100;
+
+    }
+    else if(moveCount <= 60){
+
+        reward += 50;
+
+    }
+
+
+    return reward;
+
+}
+
+
+/* ==========================================================
+   OTKLJUČAVANJE IZGLEDA
+========================================================== */
+
+function checkForUnlock(){
+
+    let newTheme = null;
+
+
+    THEMES.forEach(
+        theme => {
+
+            if(
+                playerData.solved >=
+                theme.requirement
+                &&
+                !playerData.unlocked.includes(
+                    theme.id
+                )
+            ){
+
+                playerData.unlocked.push(
+                    theme.id
+                );
+
+
+                if(!newTheme){
+
+                    newTheme =
+                        theme;
+
+                }
+
+            }
+
+        }
+    );
+
+
+    return newTheme;
+
+}
+
+
+/* ==========================================================
+   ANIMACIJA POBEDE
+========================================================== */
+
+
+function playWinAnimation(done){
+
+    const area = document.getElementById("cubeArea");
+    const colors = Object.values(getCurrentTheme().colors);
+
+    
+    document.body.style.pointerEvents = "none";
+
+    
+    const startY = rotY;
+    const duration = 1400;
+    const t0 = performance.now();
+
+    function spin(now){
+        const t = Math.min((now - t0) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        rotY = startY + 360 * ease;
+        render();
+        if(t < 1){
+            requestAnimationFrame(spin);
+        }
+        else{
+            rotY = startY;
+            render();
+        }
+    }
+    requestAnimationFrame(spin);
+
+    
+    area.classList.add("win");
+
+    
+    for(let i = 0; i < 70; i++){
+        const c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.setProperty("--drift", (Math.random() * 160 - 80) + "px");
+        c.style.setProperty("--spin", (Math.random() * 720 - 360) + "deg");
+        c.style.animationDuration = (2 + Math.random() * 1.8) + "s";
+        c.style.animationDelay = (Math.random() * 0.6) + "s";
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 4500);
+    }
+
+    
+    setTimeout(() => {
+        area.classList.remove("win");
+        document.body.style.pointerEvents = "";
+        done();
+    }, 1500);
+
+}
+
+
+/* ==========================================================
+   POBEDA
+========================================================== */
+
+function checkSolved(){
+
+    if(moveCount === 0)
+        return;
+
+
+    if(!isSolved())
+        return;
+
+
+    stopTimer();
+
+    gameStarted = false;
+
+    setControlsEnabled(false); 
+
+
+    const reward =
+        calculateReward();
+
+
+    playerData.points +=
+        reward;
+
+
+    playerData.solved++;
+
+
+    let newRecord = false;
+
+
+    if(
+        !playerData.best
+        ||
+        elapsed <
+        playerData.best
+    ){
+
+        playerData.best =
+            elapsed;
+
+        newRecord = true;
+
+    }
+
+
+    const newTheme =
+        checkForUnlock();
+
+
+    savePlayerData();
+
+    updateStats();
+
+
+    document
+    .getElementById(
+        "finalTime"
+    )
+    .textContent =
+        formatTime(
+            elapsed
+        );
+
+
+    document
+    .getElementById(
+        "finalMoves"
+    )
+    .textContent =
+
+        moveCount +
+        (
+            moveCount === 1
+            ? " potez"
+            : " poteza"
+        );
+
+
+    document
+    .getElementById(
+        "rewardPoints"
+    )
+    .textContent =
+        "+" +
+        reward +
+        " poena";
+
+
+    const unlockBox =
+        document.getElementById(
+            "unlockBox"
+        );
+
+
+    if(newTheme){
+
+        unlockBox.style.display =
+            "block";
+
+
+        document
+        .getElementById(
+            "unlockName"
+        )
+        .textContent =
+            newTheme.name;
+
+    }
+    else{
+
+        unlockBox.style.display =
+            "none";
+
+    }
+
+
+        playWinAnimation(() => {
+
+        playWinSound();
+
+        document
+        .getElementById("winModal")
+        .classList.add("show");
+    });
+
+
+    if(newRecord){
+
+        setStatus(
+            "🏆 Novi rekord!"
+        );
+
+    }
+    else{
+
+        setStatus(
+            "🎉 Kocka je složena!"
+        );
+
+    }
+
+}
+
+
+/* ==========================================================
+   NOVA IGRA
+========================================================== */
+
+function resetGame(){
+
+    stopTimer();
+
+
+    cancelMoveAnimation();
+
+
+    elapsed = 0;
+
+    moveCount = 0;
+
+    history = [];
+
+
+    gameStarted = false;
+
+
+
+    rotX = -28;
+
+    rotY = -38;
+
+
+    selectedFace = null;
+    document.querySelectorAll("[data-face]").forEach(b => b.classList.remove("active"));
+
+
+    document
+    .getElementById(
+        "timer"
+    )
+    .textContent =
+        "00:00.00";
+
+
+    document
+    .getElementById(
+        "moves"
+    )
+    .textContent =
+        "0";
+
+
+    resetState();
+
+    createCube();
+
+    
+    setControlsEnabled(false);
+
+
+    setStatus(
+        "Kocka je vraćena na početak. Pritisni „Promešaj kocku“!"
+    );
+    
+    
+    document.getElementById("scrambleBtn").disabled = false;
+
+}
+
+
+/* ==========================================================
+   PROMEŠAJ
+========================================================== */
+
+function scramble(){
+
+    resetGame();
+
+    const faces = ["U","D","L","R","F","B"];
+
+    const suffix = ["","'","2"];
+
+    
+    const moves = [];
+
+    let previous = "";
+
+    for(let i = 0; i < 25; i++){
+
+        let face;
+
+        do{
+            face = faces[Math.floor(Math.random() * faces.length)];
+        }
+        while(face === previous);
+
+        previous = face;
+
+        moves.push(
+            face + suffix[Math.floor(Math.random() * suffix.length)]
+        );
+
+    }
+
+    document.getElementById("scrambleBtn").disabled = true;
+
+    setStatus("🔀 Mešam kocku...");
+
+    const token = animToken;
+
+    let index = 0;
+
+    function next(){
+
+        
+        if(token !== animToken){
+            return;
+        }
+
+        if(index >= moves.length){
+            finishScramble();
+            return;
+        }
+
+        const move = moves[index];
+
+        index++;
+
+        animateLayer(move, () => {
+
+            doMove(move, false);
+
+            playScrambleClick();
+
+            next();
+
+        }, SCRAMBLE_MS);
+
+    }
+
+    next();
+
+}
+
+
+function finishScramble(){
+
+    moveCount = 0;
+
+    history = [];
+
+    elapsed = 0;
+
+    running = false;
+
+    document.getElementById("moves").textContent = "0";
+
+    document.getElementById("timer").textContent = "00:00.00";
+
+    
+    setControlsEnabled(true);
+
+    gameStarted = true;
+
+    document.getElementById("scrambleBtn").disabled = true;
+
+    setStatus("🔀 Kocka je promešana! Srećno!");
+
+    render();
+
+}
+
+
+/* ==========================================================
+   IZBOR STRANE
+========================================================== */
+
+document
+.querySelectorAll(
+    "[data-face]"
+)
+.forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            ()=>{
+
+                selectedFace =
+                    button.dataset.face;
+
+
+                document
+                .querySelectorAll(
+                    "[data-face]"
+                )
+                .forEach(
+                    b =>
+                    b.classList.remove(
+                        "active"
+                    )
+                );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                const names = {
+
+                    U:"GORNJA",
+
+                    D:"DONJA",
+
+                    L:"LEVA",
+
+                    R:"DESNA",
+
+                    F:"PREDNJA",
+
+                    B:"ZADNJA",
+
+                    M: "SREDNJA (M)",
+
+                    E: "SREDNJA (E)",
+
+                    S: "SREDNJA (S)"
+
+                };
+
+
+                setStatus(
+                    "Izabrana je " +
+                    names[selectedFace] +
+                    " strana"
+                );
+
+                
+                document.getElementById("forwardBtn").disabled = false;
+                document.getElementById("reverseBtn").disabled = false;
+
+                render();
+
+            }
+        );
+
+    }
+);
+
+/* ==========================================================
+   OKRETANJE
+========================================================== */
+
+document
+.getElementById(
+    "forwardBtn"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        if (!selectedFace) {
+            setStatus("⚠️ Prvo izaberi stranu!");
+            return;
+        }
+
+        playMove(
+            selectedFace
+        );
+
+    }
+);
+
+
+document
+.getElementById(
+    "reverseBtn"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        if (!selectedFace) {
+            setStatus("⚠️ Prvo izaberi stranu!");
+            return;
+        }
+
+        playMove(
+            selectedFace + "'"
+        );
+
+    }
+);
+
+/* ==========================================================
+   RESET POGLEDA
+========================================================== */
+
+document
+.getElementById(
+    "resetViewBtn"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        rotX = -28;
+
+        rotY = -38;
+
+        render();
+
+
+        setStatus(
+            "👁 Pogled je vraćen"
+        );
+
+    }
+);
+
+
+/* ==========================================================
+   GLAVNA DUGMAD
+========================================================== */
+
+document
+.getElementById(
+    "scrambleBtn"
+)
+.addEventListener(
+    "click",
+    scramble
+);
+
+
+document
+.getElementById(
+    "resetBtn"
+)
+.addEventListener(
+    "click",
+    resetGame
+);
+
+
+/* ==========================================================
+   TASTATURA
+========================================================== */
+
+document.addEventListener("keydown", e => {
+
+    
+    if(!gameStarted){
+        return;
+    }
+
+    if (e.repeat) {
+        return;
+    }
+
+    if(e.ctrlKey || e.metaKey || e.altKey){
+        return;
+    }
+
+
+    
+    const tag = e.target.tagName.toLowerCase();
+
+    if(
+        tag === "input" ||
+        tag === "textarea" ||
+        tag === "select"
+    ){
+        return;
+    }
+
+    const key = e.key.toUpperCase();
+
+    const allowedKeys = [
+        "U",
+        "D",
+        "L",
+        "R",
+        "F",
+        "B",
+        "M",
+        "E",
+        "S"
+    ];
+
+    if(!allowedKeys.includes(key)){
+        return;
+    }
+
+    e.preventDefault();
+
+    selectedFace = null;
+    document.querySelectorAll("[data-face]").forEach(b => b.classList.remove("active"));
+    document.getElementById("forwardBtn").disabled = true;
+    document.getElementById("reverseBtn").disabled = true;
+
+    const move = key + (e.shiftKey ? "'" : "");
+
+    playMove(move);
+
+});
+
+
+
+/* ==========================================================
+   POGLED + OKRETANJE SLOJEVA PRSTOM / MIŠEM
+========================================================== */
+
+const cubeArea = document.getElementById("cubeArea");
+
+
+
+
+
+let dragMode = "view";
+
+let dragStart = null;
+
+const DRAG_THRESHOLD = 14;
+
+const FACE_NORMALS = {
+    F:[0,0,1], B:[0,0,-1],
+    R:[1,0,0], L:[-1,0,0],
+    U:[0,1,0], D:[0,-1,0]
+};
+
+const AXIS_VECTORS = [[1,0,0],[0,1,0],[0,0,1]];
+
+
+const CW_DIR = {  
+    U: -1, D: 1, E: -1,  
+    R: -1, L: 1, M: 1,  
+    F: -1, B: 1, S: -1   
+};
+
+
+const LAYER_LETTER = [
+    ["L", "M", "R"],
+    ["D", "E", "U"],
+    ["B", "S", "F"]
+];
+
+function cross(a, b){
+    return [
+        a[1]*b[2] - a[2]*b[1],
+        a[2]*b[0] - a[0]*b[2],
+        a[0]*b[1] - a[1]*b[0]
+    ];
+}
+
+
+function projectToScreen(v){
+    const ay = rotY * Math.PI / 180;
+    const ax = rotX * Math.PI / 180;
+
+    const x = v[0], y = -v[1], z = v[2];
+
+    const x1 = x * Math.cos(ay) + z * Math.sin(ay);
+    const z1 = -x * Math.sin(ay) + z * Math.cos(ay);
+    const y2 = y * Math.cos(ax) - z1 * Math.sin(ax);
+
+    return [x1, y2];
+}
+
+function moveFromDrag(face, cubie, dx, dy){
+
+    const n = FACE_NORMALS[face];
+    const len = Math.hypot(dx, dy);
+
+    let best = null;
+
+    AXIS_VECTORS.forEach((axisVec, i) => {
+
+        if(n[i] !== 0) return;
+
+        const p = projectToScreen(axisVec);
+        const pl = Math.hypot(p[0], p[1]);
+
+        if(pl < 0.05) return;
+
+        const cos = (dx * p[0] + dy * p[1]) / (len * pl);
+
+        if(!best || Math.abs(cos) > Math.abs(best.cos)){
+            best = { i, cos };
+        }
+
+    });
+
+    if(!best) return null;
+
+    const t = [0,0,0];
+    t[best.i] = best.cos > 0 ? 1 : -1;
+
+    const w = cross(n, t);
+    const a = w.findIndex(v => v !== 0);
+    const dir = w[a];
+    const layer = cubie[a];
+
+    const base = LAYER_LETTER[a][layer + 1];
+
+    return dir === CW_DIR[base] ? base : base + "'";
+}
+
+function clearSelection(){
+    selectedFace = null;
+    document.querySelectorAll(".face-buttons button")
+        .forEach(b => b.classList.remove("active"));
+    document.getElementById("forwardBtn").disabled = true;
+    document.getElementById("reverseBtn").disabled = true;
+    render();
+}
+
+
+cubeArea.addEventListener("pointerdown", e => {
+
+    dragging = true;
+
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+    try {
+        cubeArea.setPointerCapture(e.pointerId);
+    } catch(err) {}
+
+    dragMode = "view";
+    dragStart = null;
+
+    const faceEl = e.target.closest ? e.target.closest(".face") : null;
+
+    if(faceEl && gameStarted){
+
+        if(animating){
+            dragMode = "none";
+            return;
+        }
+
+        const cubie = faceEl.parentElement;
+
+        dragStart = {
+            x: e.clientX,
+            y: e.clientY,
+            face: faceEl.dataset.face,
+            cubie: [+cubie.dataset.x, +cubie.dataset.y, +cubie.dataset.z]
+        };
+
+        dragMode = "layer";
+
+    }
+
+});
+
+
+document.addEventListener("pointermove", e => {
+
+    if(!dragging) return;
+
+    if(dragMode === "layer" && dragStart){
+
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+
+        if(Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+
+        const move = moveFromDrag(
+            dragStart.face, dragStart.cubie, dx, dy
+        );
+
+        if(move){
+            clearSelection();
+            playMove(move);
+            dragMode = "done";
+            return;
+        } else {
+            dragMode = "view";
+        }
+    }
+
+    if(dragMode !== "view") return;
+
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+
+    rotY += dx * .55;
+    rotX -= dy * .55;
+
+    rotX = Math.max(-80, Math.min(80, rotX));
+
+    lastX = e.clientX;
+    lastY = e.clientY;
+
+    render();
+
+});
+
+
+const stopDragging = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    
+    try {
+        cubeArea.releasePointerCapture(e.pointerId);
+    } catch(err) {}
+};
+
+document.addEventListener("pointerup", stopDragging);
+document.addEventListener("pointercancel", stopDragging);
+
+
+
+/* ==========================================================
+   STATUS
+========================================================== */
+
+function setStatus(text){
+
+    document
+    .getElementById(
+        "status"
+    )
+    .textContent =
+        text;
+
+}
+
+
+/* ==========================================================
+   PROZOR POBEDE
+========================================================== */
+
+document
+.getElementById(
+    "closeWin"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        document
+        .getElementById(
+            "winModal"
+        )
+        .classList.remove(
+            "show"
+        );
+
+        document.getElementById("scrambleBtn").disabled = false;
+        setStatus("Pritisni „Promešaj kocku“ za novu partiju");
+
+
+        selectedFace = null;
+        document.querySelectorAll("[data-face]").forEach(b => b.classList.remove("active"));
+
+
+    }
+);
+
+
+document
+.getElementById(
+    "newAfterWin"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        document
+        .getElementById(
+            "winModal"
+        )
+        .classList.remove(
+            "show"
+        );
+
+
+        scramble();
+
+    }
+);
+
+
+/* ==========================================================
+   UPUTSTVO
+========================================================== */
+
+document
+.getElementById(
+    "helpBtn"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        document
+        .getElementById(
+            "help"
+        )
+        .classList.add(
+            "show"
+        );
+
+    }
+);
+
+
+document
+.getElementById(
+    "closeHelp"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        document
+        .getElementById(
+            "help"
+        )
+        .classList.remove(
+            "show"
+        );
+
+    }
+);
+
+
+/* ==========================================================
+   MENI IZGLEDA
+========================================================== */
+
+function openThemes(){
+
+    renderThemes();
+
+
+    document
+    .getElementById(
+        "themes"
+    )
+    .classList.add(
+        "show"
+    );
+
+}
+
+
+function closeThemes(){
+
+    document
+    .getElementById(
+        "themes"
+    )
+    .classList.remove(
+        "show"
+    );
+
+}
+
+
+document
+.getElementById(
+    "themeBtn"
+)
+.addEventListener(
+    "click",
+    openThemes
+);
+
+
+document
+.getElementById(
+    "closeThemes"
+)
+.addEventListener(
+    "click",
+    closeThemes
+);
+
+
+/* ==========================================================
+   PRIKAZ IZGLEDA
+========================================================== */
+
+function renderThemes(){
+
+    const list =
+        document.getElementById(
+            "themeList"
+        );
+
+
+    list.innerHTML = "";
+
+
+    THEMES.forEach(
+        theme => {
+
+            const unlocked =
+                playerData.unlocked
+                .includes(
+                    theme.id
+                );
+
+
+            const selected =
+                playerData.selectedTheme
+                ===
+                theme.id;
+
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "theme-item";
+
+
+            const preview =
+                document.createElement(
+                    "div"
+                );
+
+
+            preview.className =
+                "theme-preview";
+
+
+            preview.textContent =
+                theme.preview;
+
+
+            preview.style.background =
+                `linear-gradient(
+                    135deg,
+                    ${theme.colors.U},
+                    ${theme.colors.F},
+                    ${theme.colors.R}
+                )`;
+
+
+            const info =
+                document.createElement(
+                    "div"
+                );
+
+
+            const name =
+                document.createElement(
+                    "div"
+                );
+
+
+            name.className =
+                "theme-name";
+
+
+            name.textContent =
+                theme.name;
+
+
+            const requirement =
+                document.createElement(
+                    "div"
+                );
+
+
+            requirement.className =
+                "theme-requirement";
+
+
+            if(unlocked){
+
+                requirement.textContent =
+                    theme.description;
+
+            }
+            else{
+
+                let tekstZahteva = "";
+                let n = theme.requirement;
+
+                if (n === 1) {
+                    tekstZahteva = "Otključava se posle 1 rešena kocka";
+                } else if (n <= 4) {
+                    tekstZahteva = "Otključava se posle " + n + " rešene kocke";
+                } else {
+                    tekstZahteva = "Otključava se posle " + n + " rešenih kocki";
+                }
+
+                requirement.textContent = tekstZahteva;
+
+            }
+
+
+            info.appendChild(
+                name
+            );
+
+            info.appendChild(
+                requirement
+            );
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            if(!unlocked){
+
+                button.textContent =
+                    "🔒 ZAKLJUČANO";
+
+                button.className =
+                    "locked";
+
+                button.disabled =
+                    true;
+
+            }
+            else if(selected){
+
+                button.textContent =
+                    "✓ IZABRANO";
+
+                button.className =
+                    "selected";
+
+            }
+            else{
+
+                button.textContent =
+                    "IZABERI";
+
+                button.addEventListener(
+                    "click",
+                    ()=>{
+
+                        playerData.selectedTheme =
+                            theme.id;
+
+
+                        savePlayerData();
+
+                        applyTheme();
+
+                        renderThemes();
+
+
+                        setStatus(
+                            "🎨 Izabran je izgled: " +
+                            theme.name
+                        );
+
+                    }
+                );
+
+            }
+
+
+            item.appendChild(
+                preview
+            );
+
+            item.appendChild(
+                info
+            );
+
+            item.appendChild(
+                button
+            );
+
+
+            list.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+/* ==========================================================
+   WEB AUDIO API - ZVUČNI EFEKTI
+========================================================== */
+
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+
+function playRotateSound() {
+    if (!soundEnabled) return;
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.04);
+    
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.04);
+}
+
+
+function playScrambleClick() {
+    if (!soundEnabled) return;
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
+    const t = audioCtx.currentTime;
+    const len = 0.05;
+
+    
+    const buffer = audioCtx.createBuffer(
+        1,
+        Math.floor(audioCtx.sampleRate * len),
+        audioCtx.sampleRate
+    );
+
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    }
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1200 + Math.random() * 1200;
+    filter.Q.value = 1.2;
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.25, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + len);
+
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    src.start(t);
+}
+
+
+function playWinSound() {
+    if (!soundEnabled) return;
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (index * 0.1));
+        
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + (index * 0.1));
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (index * 0.1) + 0.3);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(audioCtx.currentTime + (index * 0.1));
+        osc.stop(audioCtx.currentTime + (index * 0.1) + 0.3);
+    });
+}
+
+
+/* ==========================================================
+   DUGME ZA ZVUK
+========================================================== */
+
+const soundBtn = document.getElementById("soundBtn");
+
+function updateSoundBtn(){
+
+    soundBtn.classList.toggle("off", !soundEnabled);
+
+    soundBtn.title =
+        soundEnabled
+        ? "Zvuk je uključen"
+        : "Zvuk je isključen";
+
+}
+
+function loadSound(){
+
+    try{
+        soundEnabled =
+            localStorage.getItem("rubikSound") !== "off";
+    }
+    catch(error){}
+
+    updateSoundBtn();
+
+}
+
+soundBtn.addEventListener("click", () => {
+
+    soundEnabled = !soundEnabled;
+
+    try{
+        localStorage.setItem(
+            "rubikSound",
+            soundEnabled ? "on" : "off"
+        );
+    }
+    catch(error){}
+
+    updateSoundBtn();
+
+    
+    if(soundEnabled){
+        playRotateSound();
+    }
+
+});
+
+
+/* ==========================================================
+   DUGME ZA FULLSCREEN
+========================================================== */
+
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+
+fullscreenBtn.addEventListener("click", async () => {
+
+    try{
+
+        if(!document.fullscreenElement){
+
+            await document.documentElement.requestFullscreen();
+
+        }else{
+
+            await document.exitFullscreen();
+
+        }
+
+    }
+    catch(error){
+
+        console.log("Fullscreen nije dostupan.", error);
+
+    }
+
+});
+
+
+/* ==========================================================
+   POKRETANJE IGRE
+========================================================== */
+
+loadPlayerData();
+
+loadSound();
+
+resetState();
+
+createCube();
+
+
+setControlsEnabled(false);
+
+
+document
+.querySelector(
+    '[data-face="U"]'
+)
+.classList.add(
+    "active"
+);
+
+</script>
+
+</body>
+</html>
